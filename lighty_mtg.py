@@ -63,7 +63,7 @@ class LightyMTGClient(discord.Client):
     async def on_message(self, message):
         """This captures people talking to the bot in chat and responds."""
         if self.user.mentioned_in(message):
-            if not await self.is_enabled_not_banned("enablebotactions", message.author):
+            if not await self.is_enabled_not_banned("enable_bot_actions", message.author):
                 return
             prompt = re.sub(r'<[^>]+>', '', message.content).lstrip()  # this removes the user tag
             if await self.is_room_in_queue(message.author.id):
@@ -136,7 +136,7 @@ class LightyMTGClient(discord.Client):
         """This checks the users current number of pending gens against the max,
          and if there is room, returns true, otherwise, false"""
         self.generation_queue_concurrency_list.setdefault(user_id, 0)
-        user_queue_depth = int(SETTINGS.get("userqueuedepth", [1])[0])
+        user_queue_depth = int(SETTINGS.get("user_queue_depth", [1])[0])
         if self.generation_queue_concurrency_list[user_id] >= user_queue_depth:
             return False
         return True
@@ -146,7 +146,7 @@ class LightyMTGClient(discord.Client):
         """This only returns true if the module is both enabled and the user is not banned"""
         if SETTINGS[module][0] != "True":
             return False  # check if LLM generation is enabled
-        if str(user.id) in SETTINGS.get("bannedusers", [""])[0].split(','):
+        if str(user.id) in SETTINGS.get("banned_users", [""])[0].split(','):
             return False  # Exit the function if the author is banned
         return True
 
@@ -174,9 +174,9 @@ class MyPubSubPool(pubsub.PubSubPool):
     @staticmethod
     async def refresh_token():
         """Refreshes auth tokens, reauthorizes with twitch, and saves them to the settings.cfg file"""
-        client_id = SETTINGS["twitchclientid"][0]
-        client_secret = SETTINGS["twitchclientsecret"][0]
-        refresh_token = SETTINGS["twitchchannelrefreshtoken"][0]
+        client_id = SETTINGS["twitch_client_id"][0]
+        client_secret = SETTINGS["twitch_client_secret"][0]
+        refresh_token = SETTINGS["twitch_channel_refresh_token"][0]
         encoded_refresh_token = urllib.parse.quote(refresh_token)
         url = 'https://id.twitch.tv/oauth2/token'
         data = {
@@ -198,13 +198,13 @@ class MyPubSubPool(pubsub.PubSubPool):
 
             # Replace the old access token with the new one
             for i, line in enumerate(lines):
-                if line.startswith('twitchchannelauth='):
-                    lines[i] = f'twitchchannelauth={new_access_token}\n'
+                if line.startswith('twitch_channel_auth='):
+                    lines[i] = f'twitch_channel_auth={new_access_token}\n'
                     break
 
             for i, line in enumerate(lines):
-                if line.startswith('twitchchannelrefreshtoken='):
-                    lines[i] = f'twitchchannelrefreshtoken={new_refresh_token}\n'
+                if line.startswith('twitch_channel_refresh_token='):
+                    lines[i] = f'twitch_channel_refresh_token={new_refresh_token}\n'
                     break
 
             # Write the updated contents back to the settings.cfg file
@@ -222,17 +222,17 @@ class MyPubSubPool(pubsub.PubSubPool):
 discord_client = LightyMTGClient(intents=discord.Intents.all())  # client intents
 
 twitch_client = twitchio.Client(
-    token=SETTINGS["twitchapptoken"][0],
-    client_secret=SETTINGS["twitchclientsecret"][0],
-    initial_channels=[SETTINGS["twitchchannel"][0]]
+    token=SETTINGS["twitch_app_token"][0],
+    client_secret=SETTINGS["twitch_client_secret"][0],
+    initial_channels=[SETTINGS["twitch_channel"][0]]
 )
 
 
 @twitch_client.event()
 async def event_pubsub_channel_points(event: pubsub.PubSubChannelPointsMessage):
     """Watches for channel rewards matching the reward title, and adds a card to the queue when it sees one"""
-    if event.reward.title == SETTINGS['twitchrewardname'][0]:
-        channel = discord_client.get_channel(int(SETTINGS['discordchannelid'][0]))
+    if event.reward.title == SETTINGS['twitch_reward_name'][0]:
+        channel = discord_client.get_channel(int(SETTINGS['discord_channel_id'][0]))
 
         custom_user = CustomDiscordUser(event.user.name)
         mtg_card_request = MTGCardGenerator(event.input, channel, custom_user)
@@ -255,7 +255,7 @@ async def event_ready():
 @discord_client.slash_command_tree.command(description="This generates lighty mtg cards")
 async def lighty_mtg(interaction: discord.Interaction, prompt: str):
     """This is the slash command to generate a card."""
-    if not await discord_client.is_enabled_not_banned("enablebotactions", interaction.user):
+    if not await discord_client.is_enabled_not_banned("enable_bot_actions", interaction.user):
         await interaction.response.send_message("Disabled or user banned", ephemeral=True, delete_after=5)
         return
 
@@ -274,10 +274,10 @@ async def lighty_mtg(interaction: discord.Interaction, prompt: str):
 async def start_clients():
     """Spin off clients to threads and start them"""
     twitch_client.pubsub = MyPubSubPool(twitch_client)
-    topics = [pubsub.channel_points(SETTINGS["twitchchannelauth"][0])[int(SETTINGS["twitchchannelid"][0])]]
+    topics = [pubsub.channel_points(SETTINGS["twitch_channel_auth"][0])[int(SETTINGS["twitch_channel_id"][0])]]
 
     await asyncio.gather(
-        discord_client.start(SETTINGS["discordtoken"][0]),  # Start the bot
+        discord_client.start(SETTINGS["discord_token"][0]),  # Start the bot
         twitch_client.pubsub.subscribe_topics(topics),
         twitch_client.start()
     )

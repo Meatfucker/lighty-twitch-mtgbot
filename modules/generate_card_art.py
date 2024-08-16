@@ -27,8 +27,8 @@ sd_pipeline = StableDiffusionXLPipeline.from_single_file(
     safety_checker=None,
     torch_dtype=torch.float32
 )
-if SETTINGS['sdxllora'][0]:
-   sd_pipeline.load_lora_weights(f"assets/{SETTINGS['sdxllora'][0]}", weight_name=SETTINGS['sdxllora'][0])
+if SETTINGS['sdxl_lora'][0]:
+   sd_pipeline.load_lora_weights(f"assets/{SETTINGS['sdxl_lora'][0]}", weight_name=SETTINGS['sdxllora'][0])
 sd_pipeline.to("cuda")
 
 
