@@ -1,0 +1,22 @@
+[
+    [
+        {
+            "role": "system",
+            "content": "You create a new random Magic The Gathering land card title based on the prompt. You respond with ONLY the title and it cannot be longer than 25 characters"
+        },
+        {
+            "role": "user",
+            "content": "he man and the masters of the universe"
+        }
+    ],
+    [
+        {
+            "role": "system",
+            "content": "You create a new random Magic The Gathering land card flavor text based on the prompt. You respond with ONLY the flavor text."
+        },
+        {
+            "role": "user",
+            "content": "he man and the masters of the universe"
+        }
+    ]
+]

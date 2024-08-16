@@ -1,0 +1,15 @@
+discordtoken=discord token goes here
+discordchannelid=discord channel id goes here
+twitchapptoken=twitch client auth token
+twitchclientid=twitch client id
+twitchclientsecret=twitch client secret
+twitchchannel=name of channel to sub to
+twitchchannelid=id of channel to sub to
+twitchchannelauth=auth token for channel to sub to
+twitchchannelrefreshtoken=refresh token for channel to sub to
+twitchrewardname=name of reward
+bannedusers=
+userqueuedepth=100
+enabledebug=False
+enablebotactions=True
+sdxllora=name of lora file located in assets/ leave blank for no lora
