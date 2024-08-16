@@ -99,7 +99,6 @@ class LightyMTGClient(discord.Client):
                         )
                         sanitized_prompt = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', queue_request.prompt)
                         dir_path = f'users/{queue_request.user}/{queue_request.card_type}.{sanitized_prompt[:20]}.{random.randint(1, 99999999)}.webp'
-                        logger.info(dir_path)
                         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
                         queue_request.card.save(dir_path, format="WEBP")
                         message_link = f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}"
