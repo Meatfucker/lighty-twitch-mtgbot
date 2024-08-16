@@ -115,7 +115,7 @@ class LightyMTGClient(discord.Client):
                         lightycard_logger.info("Card Posted")
 
                 if queue_request.action == "discord_chat":
-                    await queue_request.generate_chat_response()
+                    await queue_request.generate_chat()
                     for i in range(0, len(queue_request.response), 2000):
                         chunk = queue_request.response[i:i + 2000]
                         await queue_request.channel.send(content=chunk, mention_author=True)

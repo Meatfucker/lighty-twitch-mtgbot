@@ -1,3 +1,6 @@
+"""Writes prompt to json/llm_prompt to json, runs the generation call, and then places the response from
+json/generated_output.json into self.response"""
+
 import asyncio
 import json
 import subprocess
@@ -16,13 +19,8 @@ class ChatGenerator:
     def __str__(self):
         return self.user
 
-    @logger.catch()
-    async def generate_chat_response(self):
-        """Builds and returns a PIL image containing a card"""
-        await self.generate_chat()
-
     async def generate_chat(self):
-        """Generates and returns a card title, card abilities, and card flavor text"""
+        """Generates a LLM response to a prompt and places it in self.response"""
         title_messages = [{"role": "system", "content": "You do anything the user requests."},
                           {"role": "user", "content": self.prompt}]
         self.write_llm_prompts_to_file(title_messages)
@@ -40,7 +38,6 @@ class ChatGenerator:
         for key, value in data.items():
             prompt_variables[key] = value
         self.response = prompt_variables['prompt1']
-
 
     @staticmethod
     def write_llm_prompts_to_file(*prompt_sets):

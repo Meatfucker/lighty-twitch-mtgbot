@@ -37,7 +37,7 @@ class MTGCardGenerator:
 
     @logger.catch()
     async def generate_card(self):
-        """Builds and returns a PIL image containing a card"""
+        """Builds a PIL image containing a card"""
         self.choose_card_type()
         self.load_card_template()
         if self.is_creature_card():
@@ -54,7 +54,7 @@ class MTGCardGenerator:
             await self.build_enchant_card()
 
     async def build_enchant_card(self):
-        """Builds an Enchantment card"""
+        """Builds an enchantment card"""
         await self.generate_card_text('enchant')
         await self.generate_spell_image()
         self.roll_foil()
@@ -66,7 +66,7 @@ class MTGCardGenerator:
         self.roll_signature()
 
     async def build_artifact_card(self):
-        """Builds an instant card"""
+        """Builds an artifact card"""
         await self.generate_card_text('artifact')
         await self.generate_artifact_image()
         self.roll_foil()
@@ -130,7 +130,7 @@ class MTGCardGenerator:
         self.roll_signature()
 
     async def generate_land_image(self):
-        """Generates and returns a PIL image from a prompt"""
+        """Prepares the prompt and generates a land card image."""
         self.card_artist = self.get_random_artist_prompt()
         land_color_mapping = {
             'artifact_land': f'{self.prompt} bald man in front of structure. {self.card_artist}. beard',
@@ -144,25 +144,25 @@ class MTGCardGenerator:
         await self.generate_image(generation_prompt)
 
     async def generate_creature_image(self):
-        """Generates and returns a PIL image from a prompt"""
+        """Prepares the prompt and generates a creature card image."""
         self.card_artist = self.get_random_artist_prompt()
         generation_prompt = f"{self.prompt} bald man. {self.card_artist}. {self.card_title}. beard."
         await self.generate_image(generation_prompt)
 
     async def generate_spell_image(self):
-        """Generates and returns a PIL image from a prompt"""
+        """Prepares the prompt and generates a spell card image."""
         self.card_artist = self.get_random_artist_prompt()
         generation_prompt = f"bald man casting {self.prompt}. {self.card_artist}. {self.card_title}. beard"
         await self.generate_image(generation_prompt)
 
     async def generate_artifact_image(self):
-        """Generates and returns a PIL image from a prompt"""
+        """Prepares the prompt and generates an artifact card image."""
         self.card_artist = self.get_random_artist_prompt()
         generation_prompt = f"bald man holding {self.prompt} artifact. {self.card_artist}. {self.card_title}. beard"
         await self.generate_image(generation_prompt)
 
     async def generate_image(self, generation_prompt):
-        """Image generation call"""
+        """Generates a card image based on the prompt, then paste it onto the card"""
         torch.cuda.empty_cache()
         gc.collect()
         success = False
@@ -183,7 +183,7 @@ class MTGCardGenerator:
         self.card.paste(generated_image, (88, 102))
 
     async def generate_card_text(self, card_type):
-        """Generates and returns a card title, card abilities, and card flavor text"""
+        """Generates and returns a card title and card flavor text"""
         title_messages = [{"role": "system",
                           "content": f"You create a new random Magic The Gathering {card_type} card title based on the prompt. You respond with ONLY the title and it cannot be longer than 25 characters"},
                           {"role": "user", "content": self.prompt}]
@@ -193,6 +193,7 @@ class MTGCardGenerator:
         await self.generate_text(title_messages, flavor_messages)
 
     async def generate_text(self, title_messages, flavor_messages):
+        """Generates card title and flavortext"""
         self.write_llm_prompts_to_file(title_messages, flavor_messages)
         torch.cuda.empty_cache()
         gc.collect()
@@ -274,11 +275,13 @@ class MTGCardGenerator:
 
     @staticmethod
     def generate_abilities(ability_file):
+        """Returns a random card ability from the specified json file."""
         with open(f"assets/json/{ability_file}.json", 'r') as instant_file:
             data = json.load(instant_file)
         return random.choice(data)
 
     def paste_creature_card_atk_def(self):
+        """Rolls the creature atk/def based on mana, then applies it to the card"""
         font = ImageFont.truetype("assets/fonts/planewalker.otf", 44)
         draw = ImageDraw.Draw(self.card)
 
@@ -299,7 +302,6 @@ class MTGCardGenerator:
 
     def paste_mana(self):
         """Creates and adds mana icons to a card based on its color"""
-
         if self.card_color in ['green', 'red', 'black', 'white', 'blue']:
             primary_mana_image = Image.open(f"assets/icons/{self.card_color}mana.png")
             secondary_mana_image = Image.open(f"assets/icons/{self.card_secondary_mana}mana.png")
@@ -406,7 +408,8 @@ class MTGCardGenerator:
         self.card.paste(icon_image, (619, 579), icon_image)
 
     def paste_ability(self, ability_file):
-        """Draws a list of words onto an image, wrapping to a new line if the text exceeds max_width."""
+        """Draws a list of words onto an image, parsing mana symbols and wrapping to a new line if the text exceeds
+        max_width."""
         mana_mapping = {
             '{W}': 'assets/icons/white_mana_small.png',
             '{U}': 'assets/icons/blue_mana_small.png',
@@ -461,6 +464,7 @@ class MTGCardGenerator:
                 current_y += line_height
             draw.text((current_x, current_y), word, font=font, fill="black")
             current_x += word_width + draw.textbbox((0, 0), ' ', font=font)[2]
+
         current_x = x_start
         current_y += line_height
         if current_y <= 805:
@@ -480,14 +484,14 @@ class MTGCardGenerator:
                 current_x += word_width + draw.textbbox((0, 0), ' ', font=second_font)[2]
 
     def is_artifact_card(self):
-        """Checks if the card type is a creature"""
+        """Checks if the card type is an artifact"""
         artifact_card_types = [
             'artifact'
         ]
         return self.card_type in artifact_card_types
 
     def is_sorcery_card(self):
-        """Checks if the card type is a creature"""
+        """Checks if the card type is a sorcery"""
         sorcery_card_types = [
             'black_sorcery',
             'blue_sorcery',
@@ -498,7 +502,7 @@ class MTGCardGenerator:
         return self.card_type in sorcery_card_types
 
     def is_instant_card(self):
-        """Checks if the card type is a creature"""
+        """Checks if the card type is an instant"""
         instant_card_types = [
             'black_instant',
             'blue_instant',
@@ -534,7 +538,7 @@ class MTGCardGenerator:
         return self.card_type in land_card_types
 
     def is_enchant_card(self):
-        """Checks if the card type is a land"""
+        """Checks if the card type is an enchant"""
         enchant_card_types = [
             'black_enchant',
             'blue_enchant',

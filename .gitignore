@@ -1,0 +1,7 @@
+# Project exclude paths
+/venv/
+/bot.log
+/settings.cfg
+/assets/botgrinder.safetensors
+/assets/lighty.safetensors
+/.idea
