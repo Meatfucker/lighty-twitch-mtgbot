@@ -223,7 +223,7 @@ class MTGCardGenerator:
 
         if self.card_color == 'artifact':
             if random.randint(1, 10) == 1:
-                base_image_path = f"assets/icons/{random.randint(1, 4)}mana.png"
+                base_image_path = f"assets/icons/{random.randint(2, 4)}mana.png"
                 self.card_is_legendary = True
             else:
                 base_image_path = f"assets/icons/1mana.png"
