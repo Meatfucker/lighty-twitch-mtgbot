@@ -16,8 +16,8 @@ with open('assets/json/artist.json', 'r', encoding="utf-8") as file:
 class MTGCardGenerator:
     """This object builds and contains the generated card."""
 
-    def __init__(self, prompt, channel, user):
-        self.action = 'lightycard'
+    def __init__(self, action, prompt, channel, user):
+        self.action = action
         self.prompt = prompt
         self.channel = channel
         self.user = user
@@ -27,8 +27,8 @@ class MTGCardGenerator:
         self.card_artist = None
         self.card_type = None
         self.card_color = None
-        self.card_primary_mana = random.choice(range(1, 5))
-        self.card_secondary_mana = random.choice(range(0, 5))
+        self.card_primary_mana = None
+        self.card_secondary_mana = None
         self.card_creature_type = None
         self.card_is_legendary = False
 
@@ -38,6 +38,8 @@ class MTGCardGenerator:
     @logger.catch()
     async def generate_card(self):
         """Builds a PIL image containing a card"""
+        self.card_primary_mana = random.choice(range(1, 5))
+        self.card_secondary_mana = random.choice(range(0, 5))
         self.choose_card_type()
         self.load_card_template()
         if self.is_creature_card():

@@ -2,17 +2,20 @@
 lighty_mtg
 """
 import io
+from io import BytesIO
 import sys
 import asyncio
 import gc
 import re
 import os
+from datetime import datetime
 import random
 import warnings
 import urllib.parse
 import torch
 import discord
 from discord import app_commands
+from discord.ui import Button, View
 from twitchio.ext import pubsub
 import twitchio
 import requests
@@ -85,10 +88,8 @@ class LightyMTGClient(discord.Client):
                 self.currently_processing = True
                 if queue_request.action == "lightycard":
 
-                    torch.cuda.empty_cache()
-
                     await queue_request.generate_card()
-                    torch.cuda.empty_cache()
+
                     with io.BytesIO() as file_object:
                         queue_request.card.save(file_object, format="PNG")
                         file_object.seek(0)
@@ -97,21 +98,65 @@ class LightyMTGClient(discord.Client):
                             content=f"Twitch Card for `{queue_request.user}`: Prompt: `{queue_request.prompt}`",
                             file=discord.File(file_object, filename=filename, spoiler=True)
                         )
-                        sanitized_prompt = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', queue_request.prompt)
-                        dir_path = f'users/{queue_request.user}/{queue_request.card_type}.{sanitized_prompt[:20]}.{random.randint(1, 99999999)}.webp'
-                        os.makedirs(os.path.dirname(dir_path), exist_ok=True)
-                        queue_request.card.save(dir_path, format="WEBP")
-                        message_link = f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}"
-                        if queue_request.user.id == 666:
-                            twitch_channel = twitch_client.get_channel("lighty")
-                            await twitch_channel.send(f"@{queue_request.user}: Your card is ready at: {message_link}")
 
-                        lightycard_logger = logger.bind(
-                            user=f'{queue_request.user}',
-                            prompt=queue_request.prompt,
-                            link=message_link
-                        )
-                        lightycard_logger.info("Card Posted")
+                    sanitized_prompt = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', queue_request.prompt)
+                    dir_path = f'users/{queue_request.user}/{queue_request.card_type}.{sanitized_prompt[:20]}.{random.randint(1, 99999999)}.webp'
+                    os.makedirs(os.path.dirname(dir_path), exist_ok=True)
+                    queue_request.card.save(dir_path, format="WEBP")
+
+                    message_link = f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}"
+                    if queue_request.user.id == 666:
+                        twitch_channel = twitch_client.get_channel("lighty")
+                        await twitch_channel.send(f"@{queue_request.user}: Your card is ready at: {message_link}")
+
+                    lightycard_logger = logger.bind(user=f'{queue_request.user}', prompt=queue_request.prompt, link=message_link)
+                    lightycard_logger.info("Card Posted")
+
+                if queue_request.action == "lightycard_three_pack":
+                    now = datetime.now()
+                    now_string = now.strftime("%Y%m%d%H%M%S")
+                    sanitized_prompt = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', queue_request.prompt)
+
+                    await queue_request.generate_card()
+                    dir_path_1 = f'users/{queue_request.user}/{queue_request.card_type}.{sanitized_prompt[:20]}.{random.randint(1, 99999999)}.webp'
+                    card_path_1 = f'users/{queue_request.user}/{now_string}/card1.webp'
+                    os.makedirs(os.path.dirname(dir_path_1), exist_ok=True)
+                    os.makedirs(os.path.dirname(card_path_1), exist_ok=True)
+                    queue_request.card.save(dir_path_1, format="WEBP")
+                    queue_request.card.save(card_path_1, format="WEBP")
+
+                    await queue_request.generate_card()
+                    dir_path_2 = f'users/{queue_request.user}/{queue_request.card_type}.{sanitized_prompt[:20]}.{random.randint(1, 99999999)}.webp'
+                    card_path_2 = f'users/{queue_request.user}/{now_string}/card2.webp'
+                    os.makedirs(os.path.dirname(dir_path_2), exist_ok=True)
+                    os.makedirs(os.path.dirname(card_path_2), exist_ok=True)
+                    queue_request.card.save(dir_path_2, format="WEBP")
+                    queue_request.card.save(card_path_2, format="WEBP")
+
+                    await queue_request.generate_card()
+                    dir_path_3 = f'users/{queue_request.user}/{queue_request.card_type}.{sanitized_prompt[:20]}.{random.randint(1, 99999999)}.webp'
+                    card_path_3 = f'users/{queue_request.user}/{now_string}/card3.webp'
+                    os.makedirs(os.path.dirname(dir_path_1), exist_ok=True)
+                    os.makedirs(os.path.dirname(card_path_3), exist_ok=True)
+                    queue_request.card.save(dir_path_3, format="WEBP")
+                    queue_request.card.save(card_path_3, format="WEBP")
+                    logger.info(queue_request.user)
+                    logger.info(f"# {queue_request.user} Open your pack here: http://theblackgoat.net/cardflip-dynamic.html?username={queue_request.user}&datetimestring={now_string}")
+                    message = await queue_request.channel.send(f"# {queue_request.user} Open your pack here: [OPEN PACK](http://theblackgoat.net/cardflip-dynamic.html?username={queue_request.user}&datetimestring={now_string})")
+                    await queue_request.channel.send(
+                        content=f"Card Pack for `{queue_request.user}`: Prompt: `{queue_request.prompt}`",
+                        files=[discord.File(dir_path_1, filename=f'lighty_mtg_{queue_request.prompt[:20]}.png', spoiler=True),
+                              discord.File(dir_path_2, filename=f'lighty_mtg_{queue_request.prompt[:20]}.png', spoiler=True),
+                              discord.File(dir_path_3, filename=f'lighty_mtg_{queue_request.prompt[:20]}.png', spoiler=True)]
+                    )
+
+                    if queue_request.user.id == 666:
+                        message_link = f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}"
+                        twitch_channel = twitch_client.get_channel("lighty")
+                        await twitch_channel.send(f"@{queue_request.user}: Your pack is ready at: {message_link}")
+
+                    logger.info("Pack created")
+
 
                 if queue_request.action == "discord_chat":
                     await queue_request.generate_chat()
@@ -129,6 +174,7 @@ class LightyMTGClient(discord.Client):
                 self.generation_queue_concurrency_list[queue_request.user.id] -= 1
                 self.generation_queue.task_done()
                 gc.collect()
+                torch.cuda.empty_cache()
                 self.currently_processing = False
 
     async def is_room_in_queue(self, user_id):
@@ -234,7 +280,7 @@ async def event_pubsub_channel_points(event: pubsub.PubSubChannelPointsMessage):
         channel = discord_client.get_channel(int(SETTINGS['discord_channel_id'][0]))
 
         custom_user = CustomDiscordUser(event.user.name)
-        mtg_card_request = MTGCardGenerator(event.input, channel, custom_user)
+        mtg_card_request = MTGCardGenerator('lightycard_three_pack', event.input, channel, custom_user)
         pubsub_logger = logger.bind(user=event.user.name, prompt=event.input)
         pubsub_logger.info(f'Twitch card reward redeemed')
         if await discord_client.is_room_in_queue(666):
@@ -258,7 +304,7 @@ async def lighty_mtg(interaction: discord.Interaction, prompt: str):
         await interaction.response.send_message("Disabled or user banned", ephemeral=True, delete_after=5)
         return
 
-    mtg_card_request = MTGCardGenerator(prompt, interaction.channel, interaction.user)
+    mtg_card_request = MTGCardGenerator('lightycard', prompt, interaction.channel, interaction.user)
 
     if await discord_client.is_room_in_queue(interaction.user.id):
         card_queue_logger = logger.bind(user=interaction.user.name, prompt=prompt)
@@ -269,6 +315,23 @@ async def lighty_mtg(interaction: discord.Interaction, prompt: str):
     else:
         await interaction.response.send_message("Queue limit reached, please wait until your current gen or gens finish")
 
+@discord_client.slash_command_tree.command(description="This generates lighty mtg cards")
+async def lighty_mtg_three_pack(interaction: discord.Interaction, prompt: str):
+    """This is the slash command to generate a card."""
+    if not await discord_client.is_enabled_not_banned("enable_bot_actions", interaction.user):
+        await interaction.response.send_message("Disabled or user banned", ephemeral=True, delete_after=5)
+        return
+
+    mtg_card_request = MTGCardGenerator('lightycard_three_pack', prompt, interaction.channel, interaction.user)
+
+    if await discord_client.is_room_in_queue(interaction.user.id):
+        card_queue_logger = logger.bind(user=interaction.user.name, prompt=prompt)
+        card_queue_logger.info(f'Card Queued')
+        discord_client.generation_queue_concurrency_list[interaction.user.id] += 1
+        await discord_client.generation_queue.put(mtg_card_request)
+        await interaction.response.send_message('Card Being Created:', ephemeral=True, delete_after=5)
+    else:
+        await interaction.response.send_message("Queue limit reached, please wait until your current gen or gens finish")
 
 async def start_clients():
     """Spin off clients to threads and start them"""

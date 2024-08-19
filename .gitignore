@@ -4,4 +4,10 @@
 /settings.cfg
 /assets/botgrinder.safetensors
 /assets/lighty.safetensors
+/assets/generated_image.png
+/json/generated_output.json
+/json/llm_prompt.json
 /.idea
+/users
+/webhost/
+/users/
