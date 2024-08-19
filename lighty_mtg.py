@@ -141,7 +141,7 @@ class LightyMTGClient(discord.Client):
                     queue_request.card.save(dir_path_3, format="WEBP")
                     queue_request.card.save(card_path_3, format="WEBP")
 
-                    message = await queue_request.channel.send(f"# `{queue_request.user}` Open your pack here: http://theblackgoat.net/cardflip-dynamic.html?username={queue_request.user}&datetimestring={now_string}")
+                    message = await queue_request.channel.send(f"# `{queue_request.user}` [OPEN PACK](http://theblackgoat.net/cardflip-dynamic.html?username={queue_request.user}&datetimestring={now_string})")
                     await queue_request.channel.send(
                         content=f"Card Pack for `{queue_request.user}`: Prompt: `{queue_request.prompt}`",
                         files=[discord.File(dir_path_1, filename=f'lighty_mtg_{queue_request.prompt[:20]}.png', spoiler=True),
